@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -99,7 +98,9 @@
             }
           ]
         }
-      ]
+      ],
+      "RTP PA": [],
+      "RTP MXXTBF": []
     };
 
     function sanitizeId(id) {
@@ -114,12 +115,18 @@
         const safeId = sanitizeId(category);
         const section = document.createElement("div");
         section.classList.add("category-section");
+
         section.innerHTML = `
-          <h3>${category}</h3>
+          <h3>
+            <span id="catTitle-${safeId}">${category}</span>
+            <span class="action-text" onclick="editCategory('${category}')">Edit</span>
+            <span class="action-text" onclick="deleteCategory('${category}')">Delete</span>
+          </h3>
           <table>
             <thead>
               <tr>
-                <th>No</th><th>Issue</th><th>Action Plan</th><th>PIC</th><th>Due</th><th>Status</th><th>Remarks</th><th>Action</th>
+                <th>No</th><th>Issue</th><th>Action Plan</th><th>PIC</th>
+                <th>Due</th><th>Status</th><th>Remarks</th><th>Action</th>
               </tr>
             </thead>
             <tbody id="tbody-${safeId}"></tbody>
@@ -130,7 +137,7 @@
         `;
         container.appendChild(section);
 
-        const tbody = section.querySelector(`#tbody-${safeId}`);
+        const tbody = section.querySelector(#tbody-${safeId});
         dataByCategory[category].forEach((entry, idx) => {
           entry.items.forEach((item, subIdx) => {
             const tr = document.createElement("tr");
@@ -153,6 +160,50 @@
         });
       });
     }
+
+    // --- Tambahan Edit & Delete Category ---
+    function editCategory(category) {
+      const safeId = sanitizeId(category);
+      const catTitle = document.getElementById(catTitle-${safeId});
+      const currentName = category;
+
+      catTitle.innerHTML = `
+        <input type="text" id="editCatInput-${safeId}" value="${currentName}" style="width:200px;" />
+        <button onclick="saveCategoryName('${category}')">Save</button>
+        <button onclick="renderAllTables()">Cancel</button>
+      `;
+    }
+
+    function saveCategoryName(oldName) {
+      const safeId = sanitizeId(oldName);
+      const input = document.getElementById(editCatInput-${safeId});
+      const newName = input.value.trim();
+
+      if (!newName) {
+        alert("Nama kategori tidak boleh kosong");
+        return;
+      }
+      if (dataByCategory[newName] && newName !== oldName) {
+        alert("Nama kategori sudah ada");
+        return;
+      }
+
+      // Pindahkan data
+      dataByCategory[newName] = dataByCategory[oldName];
+      if (newName !== oldName) {
+        delete dataByCategory[oldName];
+      }
+
+      renderAllTables();
+    }
+
+    function deleteCategory(category) {
+      if (confirm(Yakin hapus kategori "${category}"?)) {
+        delete dataByCategory[category];
+        renderAllTables();
+      }
+    }
+    // --- End Tambahan ---
 
     function addNewCategory() {
       const input = document.getElementById("newCategoryInput");
@@ -202,7 +253,7 @@
       if (!entry) return;
 
       const safeId = sanitizeId(category);
-      const tbody = document.querySelector(`#tbody-${safeId}`);
+      const tbody = document.querySelector(#tbody-${safeId});
       const row = tbody.querySelectorAll("tr")[getRowIndex(category, no, idx)];
       if (!row) return;
 
@@ -214,7 +265,6 @@
       entry.items[idx].status = cells[5].innerText.trim();
       entry.items[idx].remarks = cells[6].innerText.trim();
 
-      // Feedback visual
       row.style.backgroundColor = "#d4edda";
       setTimeout(() => {
         row.style.backgroundColor = "";
