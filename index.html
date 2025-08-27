@@ -4,14 +4,13 @@
   <meta charset="UTF-8">
   <title>RTP EM BMB</title>
   <style>
-    body { font-family: 'Aptos Narrow', Arial, sans-serif; font-size: 12px; background-color: #f4f4f4; padding: 20px; }
+    body { font-family: 'Aptos Narrow', Arial, sans-serif; font-size: 11px; background-color: #f4f4f4; padding: 20px; }
     h2 { text-align: center; margin-bottom: 10px; }
-    h3 { margin-top: 30px; color: #333; }
     table { width: 100%; border-collapse: collapse; background-color: #fff; margin-top: 10px; table-layout: fixed; }
     th, td { border: 1px solid #ccc; padding: 4px; vertical-align: top; font-weight: normal; word-wrap: break-word; }
     th { background-color: #eee; }
     td[contenteditable="true"] { background-color: #ffffcc; }
-    span.action-text { cursor: pointer; color: blue; text-decoration: underline; margin-right: 6px; }
+    span.action-text { cursor: pointer; color: blue; text-decoration: underline; margin-left: 5px; }
     .top-buttons, .bottom-buttons { display: flex; justify-content: flex-end; margin: 10px 0; gap: 10px; }
     .category-section { margin-bottom: 40px; }
     th:nth-child(1), td:nth-child(1) { width: 40px; }
@@ -22,6 +21,14 @@
     th:nth-child(6), td:nth-child(6) { width: 80px; }
     th:nth-child(7), td:nth-child(7) { width: 200px; }
     th:nth-child(8), td:nth-child(8) { width: 120px; }
+    .category-header {
+      background-color: yellow;
+      color: black;
+      padding: 6px;
+      font-weight: bold;
+      text-align: left;
+    }
+    .category-header span.action-text { margin-left: 10px; }
   </style>
 </head>
 <body>
@@ -52,7 +59,7 @@ function sanitizeId(id){return id.replace(/\s+/g,'_').replace(/[^\w\-]/g,'');}
 function escapeHtml(str){if(str==null) return ''; return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 function recalculateNo(category){if(!dataByCategory[category]) return; dataByCategory[category].forEach((entry,idx)=>entry.no=idx+1);}
 
-// update semua data dari table contenteditable sebelum render ulang
+// Update semua data dari contenteditable sebelum render / add / save
 function updateAllFromTable(){
   Object.keys(dataByCategory).forEach(category=>{
     const safeId = sanitizeId(category);
@@ -64,31 +71,30 @@ function updateAllFromTable(){
         const row = tbody.querySelectorAll('tr')[rowCount++];
         const cells = row.querySelectorAll('td');
         item.issue = cells[1].innerText.trim();
-        // Gunakan innerText untuk Action Plan, split baris baru
         item.actions = cells[2].innerText.split('\n').map(a=>a.trim());
         item.pic = cells[3].innerText.trim();
         item.due = cells[4].innerText.trim();
         item.status = cells[5].innerText.trim();
         item.remarks = cells[6].innerText.trim();
       });
-    });
-  });
+    });
+  });
 }
 
 function renderAllTables(){
-  const container=document.getElementById("categoryContainer");
-  container.innerHTML="";
+  const container = document.getElementById("categoryContainer");
+  container.innerHTML = "";
   Object.keys(dataByCategory).forEach(category=>{
     recalculateNo(category);
-    const safeId=sanitizeId(category);
-    const section=document.createElement("div");
+    const safeId = sanitizeId(category);
+    const section = document.createElement("div");
     section.classList.add("category-section");
-    section.innerHTML=`
-      <h3>
+    section.innerHTML = `
+      <div class="category-header">
         <span id="catTitle-${safeId}">${escapeHtml(category)}</span>
         <span class="action-text" onclick='editCategory(${JSON.stringify(category)})'>Edit</span>
         <span class="action-text" onclick='deleteCategory(${JSON.stringify(category)})'>Delete</span>
-      </h3>
+      </div>
       <table>
         <thead><tr>
           <th>No</th><th>Issue</th><th>Action Plan</th><th>PIC</th><th>Due</th><th>Status</th><th>Remarks</th><th>Action</th>
@@ -98,12 +104,12 @@ function renderAllTables(){
       </table>
     `;
     container.appendChild(section);
-    const tbody=section.querySelector('#tbody-'+safeId);
-    if(!tbody) return;
+
+    const tbody = section.querySelector('#tbody-'+safeId);
     dataByCategory[category].forEach(entry=>{
       entry.items.forEach((item,subIdx)=>{
-        const tr=document.createElement("tr");
-        tr.innerHTML=`
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
           <td>${subIdx===0?entry.no:""}</td>
           <td contenteditable="true">${escapeHtml(item.issue)}</td>
           <td contenteditable="true">${escapeHtml(item.actions.join("\n")).replace(/\n/g,"<br>")}</td>
@@ -125,10 +131,10 @@ function renderAllTables(){
 
 // --- Category edit/delete ---
 function editCategory(category){
-  const safeId=sanitizeId(category);
-  const catTitle=document.getElementById('catTitle-'+safeId);
+  const safeId = sanitizeId(category);
+  const catTitle = document.getElementById('catTitle-'+safeId);
   if(!catTitle) return;
-  catTitle.innerHTML=`
+  catTitle.innerHTML = `
     <input type="text" id="editCatInput-${safeId}" value="${escapeHtml(category)}" style="width:200px;" />
     <button onclick='saveCategoryName(${JSON.stringify(category)})'>Save</button>
     <button onclick="renderAllTables()">Cancel</button>
@@ -136,13 +142,13 @@ function editCategory(category){
 }
 
 function saveCategoryName(oldName){
-  const safeId=sanitizeId(oldName);
-  const input=document.getElementById('editCatInput-'+safeId);
+  const safeId = sanitizeId(oldName);
+  const input = document.getElementById('editCatInput-'+safeId);
   if(!input) return;
-  const newName=input.value.trim();
+  const newName = input.value.trim();
   if(!newName){alert("Nama kategori tidak boleh kosong"); return;}
   if(dataByCategory[newName] && newName!==oldName){alert("Nama kategori sudah ada"); return;}
-  dataByCategory[newName]=dataByCategory[oldName];
+  dataByCategory[newName] = dataByCategory[oldName];
   if(newName!==oldName) delete dataByCategory[oldName];
   renderAllTables();
 }
@@ -159,38 +165,8 @@ function deleteItem(category,no,idx){ updateAllFromTable(); const entry=dataByCa
 function getRowIndex(category,no,idx){ let count=0; for(let i=0;i<dataByCategory[category].length;i++){ if(dataByCategory[category][i].no===no){return count+idx;} count+=dataByCategory[category][i].items.length;} return -1; }
 
 // --- Save / Load JSON ---
-function saveToJSON() {
-  const json = JSON.stringify({dataByCategory}, null, 2);
-  const blob = new Blob([json], {type:"application/json"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "rtp_all_data.json";
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-function loadFromJSON() {
-  const fileInput = document.getElementById("jsonFileInput");
-  const file = fileInput.files[0];
-  if (!file) {
-    alert("Pilih file JSON terlebih dahulu.");
-    return;
-  }
-
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      const parsed = JSON.parse(e.target.result);
-      dataByCategory = parsed.dataByCategory || {};
-      Object.keys(dataByCategory).forEach(cat => recalculateNo(cat));
-      renderAllTables();
-    } catch (err) {
-      alert("Format JSON tidak valid.");
-    }
-  };
-  reader.readAsText(file);
-}
+function saveToJSON(){ updateAllFromTable(); const json=JSON.stringify({dataByCategory},null,2); const blob=new Blob([json],{type:"application/json"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download="rtp_all_data.json"; a.click(); URL.revokeObjectURL(url); }
+function loadFromJSON(){ const fileInput=document.getElementById("jsonFileInput"); const file=fileInput.files[0]; if(!file){alert("Pilih file JSON terlebih dahulu."); return;} const reader=new FileReader(); reader.onload=function(e){ try{ const parsed=JSON.parse(e.target.result); dataByCategory=parsed.dataByCategory||{}; Object.keys(dataByCategory).forEach(cat=>recalculateNo(cat)); renderAllTables(); }catch(err){alert("Format JSON tidak valid.");} }; reader.readAsText(file); }
 
 renderAllTables();
 </script>
