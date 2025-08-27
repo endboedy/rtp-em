@@ -7,7 +7,7 @@
   <style>
     body {
       font-family: 'Aptos Narrow', Arial, sans-serif;
-      font-size: 14px;
+      font-size: 11px;
       background-color: #f4f4f4;
       padding: 20px;
     }
@@ -23,17 +23,12 @@
     }
     th, td {
       border: 1px solid #ccc;
-      padding: 8px;
+      padding: 4px;
       vertical-align: top;
       font-weight: normal;
     }
     th {
       background-color: #eee;
-    }
-    button {
-      margin: 2px;
-      padding: 6px 12px;
-      cursor: pointer;
     }
     .top-buttons, .bottom-buttons {
       display: flex;
@@ -58,11 +53,11 @@
       <tr>
         <th>No</th>
         <th>Issue</th>
+        <th>Action Plan</th>
         <th>PIC</th>
         <th>Due</th>
         <th>Status</th>
         <th>Remarks</th>
-        <th>Action Plan(s)</th>
         <th>Action</th>
       </tr>
     </thead>
@@ -129,15 +124,15 @@
           tr.innerHTML = `
             <td>${idx === 0 ? entry.no : ""}</td>
             <td contenteditable="true">${item.issue}</td>
+            <td contenteditable="true">${item.actions.join("<br>")}</td>
             <td contenteditable="true">${item.pic}</td>
             <td contenteditable="true">${item.due}</td>
             <td contenteditable="true">${item.status}</td>
             <td contenteditable="true">${item.remarks}</td>
-            <td contenteditable="true">${item.actions.join("<br>")}</td>
             <td>
-              ${idx === 0 ? `<button onclick="addSubItem(${entry.no})">Add Sub</button>` : ""}
-              <button onclick="saveEdit(${entry.no}, ${idx})">Save</button>
-              ${idx === 0 ? `<button onclick="deleteIssue(${entry.no})">Delete</button>` : ""}
+              ${idx === 0 ? `<span onclick="addSubItem(${entry.no})">Add Sub</span> | ` : ""}
+              <span onclick="saveEdit(${entry.no}, ${idx})">Save</span>
+              ${idx === 0 ? ` | <span onclick="deleteIssue(${entry.no})">Delete</span>` : ""}
             </td>
           `;
           tableBody.appendChild(tr);
@@ -182,11 +177,11 @@
       const cells = row.querySelectorAll("td");
 
       entry.items[idx].issue = cells[1].innerText.trim();
-      entry.items[idx].pic = cells[2].innerText.trim();
-      entry.items[idx].due = cells[3].innerText.trim();
-      entry.items[idx].status = cells[4].innerText.trim();
-      entry.items[idx].remarks = cells[5].innerText.trim();
-      entry.items[idx].actions = cells[6].innerHTML.split("<br>").map(a => a.trim());
+      entry.items[idx].actions = cells[2].innerHTML.split("<br>").map(a => a.trim());
+      entry.items[idx].pic = cells[3].innerText.trim();
+      entry.items[idx].due = cells[4].innerText.trim();
+      entry.items[idx].status = cells[5].innerText.trim();
+      entry.items[idx].remarks = cells[6].innerText.trim();
 
       renderTable();
     }
