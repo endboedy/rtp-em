@@ -157,9 +157,19 @@ function deleteItem(category,no,idx){ updateAllFromTable(); const entry=dataByCa
 
 function getRowIndex(category,no,idx){ let count=0; for(let i=0;i<dataByCategory[category].length;i++){ if(dataByCategory[category][i].no===no){return count+idx;} count+=dataByCategory[category][i].items.length;} return -1; }
 
-// --- Save / Load JSON ---
-function saveToJSON(){ const json=JSON.stringify({dataByCategory},null,2); const blob=new Blob([json],{type:"application/json"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download="rtp_all_data.json"; a.click(); URL.revokeObjectURL(url);}
-unction loadFromJSON() {
+/ --- Save / Load JSON ---
+function saveToJSON() {
+  const json = JSON.stringify({dataByCategory}, null, 2);
+  const blob = new Blob([json], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "rtp_all_data.json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function loadFromJSON() {
   const fileInput = document.getElementById("jsonFileInput");
   const file = fileInput.files[0];
   if (!file) {
