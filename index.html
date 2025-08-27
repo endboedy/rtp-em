@@ -13,17 +13,17 @@
     }
     h2 {
       text-align: center;
-      margin-bottom: 20px;
     }
     table {
       width: 100%;
       border-collapse: collapse;
       background-color: #fff;
+      margin-top: 10px;
     }
     th, td {
       border: 1px solid #ccc;
       padding: 8px;
-      text-align: left;
+      vertical-align: top;
     }
     th {
       background-color: #eee;
@@ -36,6 +36,9 @@
       display: flex;
       justify-content: flex-end;
       margin: 10px 0;
+    }
+    .action-plan {
+      margin-left: 20px;
     }
   </style>
 </head>
@@ -52,11 +55,11 @@
       <tr>
         <th>No</th>
         <th>Issue</th>
-        <th>Action Plan</th>
         <th>PIC</th>
         <th>Due</th>
         <th>Status</th>
         <th>Remarks</th>
+        <th>Action Plan(s)</th>
         <th>Action</th>
       </tr>
     </thead>
@@ -64,7 +67,7 @@
   </table>
 
   <div class="bottom-buttons">
-    <button id="addRowBtn">Add New Row</button>
+    <button onclick="addIssue()">Add New Issue</button>
   </div>
 
   <script>
@@ -72,11 +75,14 @@
       {
         no: 1,
         issue: "PM Accuracy Achivement 100%",
-        action: "Juli Actual achivement 98%",
         pic: "Endar",
         due: "Agustus",
         status: "Continue",
-        remarks: "Target 90 di Desember"
+        remarks: "Target 90 di Desember",
+        actions: [
+          "Juli Actual achivement 98%",
+          "Evaluasi ulang jadwal PM"
+        ]
       }
     ];
 
@@ -84,98 +90,15 @@
 
     function renderTable() {
       tableBody.innerHTML = "";
-      data.forEach((row, index) => {
+      data.forEach((item, index) => {
         const tr = document.createElement("tr");
 
-        Object.values(row).forEach((value) => {
-          const td = document.createElement("td");
-          td.textContent = value;
-          tr.appendChild(td);
-        });
-
-        const actionTd = document.createElement("td");
-        actionTd.innerHTML = `
-          <button onclick="editRow(${index})">Edit</button>
-          <button onclick="saveRow(${index})">Save</button>
-          <button onclick="deleteRow(${index})">Delete</button>
-        `;
-        tr.appendChild(actionTd);
-        tableBody.appendChild(tr);
-      });
-    }
-
-    function addRow() {
-      data.push({
-        no: data.length + 1,
-        issue: "",
-        action: "",
-        pic: "",
-        due: "",
-        status: "",
-        remarks: ""
-      });
-      renderTable();
-    }
-
-    function editRow(index) {
-      const row = tableBody.rows[index];
-      for (let i = 0; i < 7; i++) {
-        const cell = row.cells[i];
-        const input = document.createElement("input");
-        input.value = cell.textContent;
-        cell.textContent = "";
-        cell.appendChild(input);
-      }
-    }
-
-    function saveRow(index) {
-      const row = tableBody.rows[index];
-      const updated = {};
-      for (let i = 0; i < 7; i++) {
-        const input = row.cells[i].querySelector("input");
-        updated[Object.keys(data[index])[i]] = input ? input.value : row.cells[i].textContent;
-      }
-      data[index] = updated;
-      renderTable();
-      saveToJSON();
-    }
-
-    function deleteRow(index) {
-      data.splice(index, 1);
-      renderTable();
-      saveToJSON();
-    }
-
-    function saveToJSON() {
-      const jsonData = JSON.stringify(data, null, 2);
-      const blob = new Blob([jsonData], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "data.json";
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    function loadFromJSON() {
-      const input = document.createElement("input");
-      input.type = "file";
-      input.accept = ".json";
-      input.onchange = (e) => {
-        const file = e.target.files[0];
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          data = JSON.parse(event.target.result);
-          renderTable();
-        };
-        reader.readAsText(file);
-      };
-      input.click();
-    }
-
-    document.getElementById("addRowBtn").addEventListener("click", addRow);
-
-    renderTable();
-  </script>
-</body>
-</html>
+        tr.innerHTML = `
+          <td>${item.no}</td>
+          <td>${item.issue}</td>
+          <td>${item.pic}</td>
+          <td>${item.due}</td>
+          <td>${item.status}</td>
+          <td>${item.remarks}</td>
+          <td>
+            <ul id="action-list-${index}">
