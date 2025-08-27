@@ -159,7 +159,27 @@ function getRowIndex(category,no,idx){ let count=0; for(let i=0;i<dataByCategory
 
 // --- Save / Load JSON ---
 function saveToJSON(){ const json=JSON.stringify({dataByCategory},null,2); const blob=new Blob([json],{type:"application/json"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download="rtp_all_data.json"; a.click(); URL.revokeObjectURL(url);}
-function loadFromJSON(){ const fileInput=document.getElementById("jsonFileInput"); const file=fileInput.files[0]; if(!file){alert("Pilih file JSON terlebih dahulu."); return;} const reader=new FileReader(); reader.onload=function(e){ try{ const parsed=JSON.parse(e.target.result); dataByCategory=parsed.dataByCategory||{}; Object.keys(dataByCategory).forEach(cat=>recalculateNo(cat)); renderAllTables(); }catch(err){alert("Format JSON tidak valid.");} } reader.readAsText(file); }
+unction loadFromJSON() {
+  const fileInput = document.getElementById("jsonFileInput");
+  const file = fileInput.files[0];
+  if (!file) {
+    alert("Pilih file JSON terlebih dahulu.");
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      dataByCategory = parsed.dataByCategory || {};
+      Object.keys(dataByCategory).forEach(cat => recalculateNo(cat));
+      renderAllTables();
+    } catch (err) {
+      alert("Format JSON tidak valid.");
+    }
+  };
+  reader.readAsText(file);
+}
 
 renderAllTables();
 </script>
