@@ -40,10 +40,6 @@
       justify-content: flex-end;
       margin: 10px 0;
     }
-    ul {
-      padding-left: 20px;
-      margin: 0;
-    }
     td[contenteditable="true"] {
       background-color: #ffffcc;
     }
@@ -81,14 +77,44 @@
     let data = [
       {
         no: 1,
-        issue: "PM Accuracy Achivement 100%",
-        pic: "Endar",
-        due: "Agustus",
-        status: "Continue",
-        remarks: "Target 90 di Desember",
-        actions: [
-          "Juli Actual achivement 98%",
-          "Evaluasi ulang jadwal PM"
+        items: [
+          {
+            issue: "List Tools 800 item (Teregister Asset)",
+            actions: ["Update collect masing masing section status tools"],
+            pic: "By Section",
+            due: "Juni",
+            status: "Continue",
+            remarks: "Continue SE: Done, Track: Done, Wheel: 15 Juli, Audit: 23 Juli"
+          },
+          {
+            issue: "",
+            actions: ["Setelah list, serahkan kembali ke SCM simpan by section rack di SCM"],
+            pic: "Section Head exc",
+            due: "Maret",
+            status: "Continue",
+            remarks: "Rule peminjaman tools harus sepengetahuan section head lain"
+          },
+          {
+            issue: "",
+            actions: ["Kompetensi Tools room"],
+            pic: "",
+            due: "",
+            status: "",
+            remarks: ""
+          }
+        ]
+      },
+      {
+        no: 2,
+        items: [
+          {
+            issue: "WO yang belum Kembali",
+            actions: ["Monitoring & memastikan WO job done kembali ke admin"],
+            pic: "Section Head Exce",
+            due: "Daily",
+            status: "Continue",
+            remarks: ""
+          }
         ]
       }
     ];
@@ -97,66 +123,88 @@
 
     function renderTable() {
       tableBody.innerHTML = "";
-      data.forEach((item, index) => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${item.no}</td>
-          <td contenteditable="false">${item.issue}</td>
-          <td contenteditable="false">${item.pic}</td>
-          <td contenteditable="false">${item.due}</td>
-          <td contenteditable="false">${item.status}</td>
-          <td contenteditable="false">${item.remarks}</td>
-          <td contenteditable="false">${item.actions.join("<br>")}</td>
-          <td>
-            <button onclick="enableEdit(this)">Edit</button>
-            <button onclick="saveEdit(this, ${index})">Save</button>
-            <button onclick="deleteIssue(${index})">Delete</button>
-          </td>
-        `;
-        tableBody.appendChild(tr);
+      data.forEach(entry => {
+        entry.items.forEach((item, idx) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${idx === 0 ? entry.no : ""}</td>
+            <td contenteditable="true">${item.issue}</td>
+            <td contenteditable="true">${item.pic}</td>
+            <td contenteditable="true">${item.due}</td>
+            <td contenteditable="true">${item.status}</td>
+            <td contenteditable="true">${item.remarks}</td>
+            <td contenteditable="true">${item.actions.join("<br>")}</td>
+            <td>
+              ${idx === 0 ? `<button onclick="addSubItem(${entry.no})">Add Sub</button>` : ""}
+              <button onclick="saveEdit(${entry.no}, ${idx})">Save</button>
+              ${idx === 0 ? `<button onclick="deleteIssue(${entry.no})">Delete</button>` : ""}
+            </td>
+          `;
+          tableBody.appendChild(tr);
+        });
       });
-    }
-
-    function enableEdit(button) {
-      const row = button.closest("tr");
-      const cells = row.querySelectorAll("td");
-      for (let i = 1; i <= 6; i++) {
-        cells[i].setAttribute("contenteditable", "true");
-      }
-      cells[6].setAttribute("contenteditable", "true"); // Action Plan(s)
-    }
-
-    function saveEdit(button, index) {
-      const row = button.closest("tr");
-      const cells = row.querySelectorAll("td");
-
-      data[index].issue = cells[1].innerText.trim();
-      data[index].pic = cells[2].innerText.trim();
-      data[index].due = cells[3].innerText.trim();
-      data[index].status = cells[4].innerText.trim();
-      data[index].remarks = cells[5].innerText.trim();
-      data[index].actions = cells[6].innerText.split("\n").map(a => a.trim());
-
-      renderTable();
     }
 
     function addIssue() {
       const newIssue = {
         no: data.length + 1,
-        issue: "New Issue",
-        pic: "PIC",
-        due: "Due Date",
-        status: "Open",
-        remarks: "Remarks",
-        actions: ["Initial Action"]
+        items: [
+          {
+            issue: "New Issue",
+            actions: ["Initial Action"],
+            pic: "PIC",
+            due: "Due Date",
+            status: "Open",
+            remarks: ""
+          }
+        ]
       };
       data.push(newIssue);
       renderTable();
     }
 
-    function deleteIssue(index) {
-      if (confirm("Yakin ingin menghapus issue ini?")) {
-        data.splice(index, 1);
+    function addSubItem(no) {
+      const entry = data.find(d => d.no === no);
+      entry.items.push({
+        issue: "",
+        actions: [""],
+        pic: "",
+        due: "",
+        status: "",
+        remarks: ""
+      });
+      renderTable();
+    }
+
+    function saveEdit(no, idx) {
+      const entry = data.find(d => d.no === no);
+      const row = tableBody.querySelectorAll("tr")[getRowIndex(no, idx)];
+      const cells = row.querySelectorAll("td");
+
+      entry.items[idx].issue = cells[1].innerText.trim();
+      entry.items[idx].pic = cells[2].innerText.trim();
+      entry.items[idx].due = cells[3].innerText.trim();
+      entry.items[idx].status = cells[4].innerText.trim();
+      entry.items[idx].remarks = cells[5].innerText.trim();
+      entry.items[idx].actions = cells[6].innerHTML.split("<br>").map(a => a.trim());
+
+      renderTable();
+    }
+
+    function getRowIndex(no, idx) {
+      let count = 0;
+      for (let i = 0; i < data.length; i++) {
+        if (data[i].no === no) {
+          return count + idx;
+        }
+        count += data[i].items.length;
+      }
+      return -1;
+    }
+
+    function deleteIssue(no) {
+      if (confirm("Yakin ingin menghapus semua item dengan nomor ini?")) {
+        data = data.filter(d => d.no !== no);
         renderTable();
       }
     }
