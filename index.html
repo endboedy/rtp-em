@@ -37,9 +37,6 @@
       justify-content: flex-end;
       margin: 10px 0;
     }
-    .action-plan {
-      margin-left: 20px;
-    }
   </style>
 </head>
 <body>
@@ -102,3 +99,5 @@
           <td>${item.remarks}</td>
           <td>
             <ul id="action-list-${index}">
+              ${item.actions.map((act, i) => `
+                <li>
