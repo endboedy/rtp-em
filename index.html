@@ -89,11 +89,16 @@
       ]
     };
 
+    function sanitizeId(id) {
+      return id.replace(/\s+/g, '_').replace(/[^\w\-]/g, '');
+    }
+
     function renderAllTables() {
       const container = document.getElementById("categoryContainer");
       container.innerHTML = "";
 
       Object.keys(dataByCategory).forEach(category => {
+        const safeId = sanitizeId(category);
         const section = document.createElement("div");
         section.classList.add("category-section");
         section.innerHTML = `
@@ -104,7 +109,7 @@
                 <th>No</th><th>Issue</th><th>Action Plan</th><th>PIC</th><th>Due</th><th>Status</th><th>Remarks</th><th>Action</th>
               </tr>
             </thead>
-            <tbody id="tbody-${category}"></tbody>
+            <tbody id="tbody-${safeId}"></tbody>
             <tfoot>
               <tr><td colspan="8"><button onclick="addIssue('${category}')">Add New Issue</button></td></tr>
             </tfoot>
@@ -112,7 +117,7 @@
         `;
         container.appendChild(section);
 
-        const tbody = section.querySelector(`#tbody-${category}`);
+        const tbody = section.querySelector(`#tbody-${safeId}`);
         dataByCategory[category].forEach((entry, idx) => {
           entry.items.forEach((item, subIdx) => {
             const tr = document.createElement("tr");
@@ -151,16 +156,14 @@
     function addIssue(category) {
       const newIssue = {
         no: dataByCategory[category].length + 1,
-        items: [
-          {
-            issue: "New Issue",
-            actions: ["Initial Action"],
-            pic: "PIC",
-            due: "Due Date",
-            status: "Open",
-            remarks: ""
-          }
-        ]
+        items: [{
+          issue: "New Issue",
+          actions: ["Initial Action"],
+          pic: "PIC",
+          due: "Due Date",
+          status: "Open",
+          remarks: ""
+        }]
       };
       dataByCategory[category].push(newIssue);
       renderAllTables();
@@ -168,23 +171,29 @@
 
     function addSubItem(category, no) {
       const entry = dataByCategory[category].find(d => d.no === no);
-      entry.items.push({
-        issue: "",
-        actions: [""],
-        pic: "",
-        due: "",
-        status: "",
-        remarks: ""
-      });
-      renderAllTables();
+      if (entry) {
+        entry.items.push({
+          issue: "",
+          actions: [""],
+          pic: "",
+          due: "",
+          status: "",
+          remarks: ""
+        });
+        renderAllTables();
+      }
     }
 
     function saveEdit(category, no, idx) {
       const entry = dataByCategory[category].find(d => d.no === no);
-      const tbody = document.querySelector(`#tbody-${category}`);
-      const row = tbody.querySelectorAll("tr")[getRowIndex(category, no, idx)];
-      const cells = row.querySelectorAll("td");
+      if (!entry) return;
 
+      const safeId = sanitizeId(category);
+      const tbody = document.querySelector(`#tbody-${safeId}`);
+      const row = tbody.querySelectorAll("tr")[getRowIndex(category, no, idx)];
+      if (!row) return;
+
+      const cells = row.querySelectorAll("td");
       entry.items[idx].issue = cells[1].innerText.trim();
       entry.items[idx].actions = cells[2].innerHTML.split("<br>").map(a => a.trim());
       entry.items[idx].pic = cells[3].innerText.trim();
