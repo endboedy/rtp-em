@@ -157,7 +157,7 @@ function deleteItem(category,no,idx){ updateAllFromTable(); const entry=dataByCa
 
 function getRowIndex(category,no,idx){ let count=0; for(let i=0;i<dataByCategory[category].length;i++){ if(dataByCategory[category][i].no===no){return count+idx;} count+=dataByCategory[category][i].items.length;} return -1; }
 
-/ --- Save / Load JSON ---
+// --- Save / Load JSON ---
 function saveToJSON() {
   const json = JSON.stringify({dataByCategory}, null, 2);
   const blob = new Blob([json], {type:"application/json"});
