@@ -4,57 +4,16 @@
   <meta charset="UTF-8">
   <title>RTP EM BMB</title>
   <style>
-    body {
-      font-family: 'Aptos Narrow', Arial, sans-serif;
-      font-size: 11px;
-      background-color: #f4f4f4;
-      padding: 20px;
-    }
-    h2 {
-      text-align: center;
-      margin-bottom: 10px;
-    }
-    h3 {
-      margin-top: 30px;
-      color: #333;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background-color: #fff;
-      margin-top: 10px;
-      table-layout: fixed;
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 4px;
-      vertical-align: top;
-      font-weight: normal;
-      word-wrap: break-word;
-    }
-    th {
-      background-color: #eee;
-    }
-    td[contenteditable="true"] {
-      background-color: #ffffcc;
-    }
-    span.action-text {
-      cursor: pointer;
-      color: blue;
-      text-decoration: underline;
-      margin-right: 6px;
-    }
-    .top-buttons, .bottom-buttons {
-      display: flex;
-      justify-content: flex-end;
-      margin: 10px 0;
-      gap: 10px;
-    }
-    .category-section {
-      margin-bottom: 40px;
-    }
-
-    /* Lebar kolom tetap */
+    body { font-family: 'Aptos Narrow', Arial, sans-serif; font-size: 11px; background-color: #f4f4f4; padding: 20px; }
+    h2 { text-align: center; margin-bottom: 10px; }
+    h3 { margin-top: 30px; color: #333; }
+    table { width: 100%; border-collapse: collapse; background-color: #fff; margin-top: 10px; table-layout: fixed; }
+    th, td { border: 1px solid #ccc; padding: 4px; vertical-align: top; font-weight: normal; word-wrap: break-word; }
+    th { background-color: #eee; }
+    td[contenteditable="true"] { background-color: #ffffcc; }
+    span.action-text { cursor: pointer; color: blue; text-decoration: underline; margin-right: 6px; }
+    .top-buttons, .bottom-buttons { display: flex; justify-content: flex-end; margin: 10px 0; gap: 10px; }
+    .category-section { margin-bottom: 40px; }
     th:nth-child(1), td:nth-child(1) { width: 40px; }
     th:nth-child(2), td:nth-child(2) { width: 200px; }
     th:nth-child(3), td:nth-child(3) { width: 200px; }
@@ -66,287 +25,143 @@
   </style>
 </head>
 <body>
-  <h2>RTP EM BMB</h2>
+<h2>RTP EM BMB</h2>
 
-  <div class="top-buttons">
-    <label for="jsonFileInput">Choose File:</label>
-    <input type="file" id="jsonFileInput" accept=".json" />
-    <button onclick="loadFromJSON()">Load JSON</button>
-    <button onclick="saveToJSON()">Save to JSON</button>
-  </div>
+<div class="top-buttons">
+  <label for="jsonFileInput">Choose File:</label>
+  <input type="file" id="jsonFileInput" accept=".json" />
+  <button onclick="loadFromJSON()">Load JSON</button>
+  <button onclick="saveToJSON()">Save to JSON</button>
+</div>
 
-  <div class="bottom-buttons">
-    <input type="text" id="newCategoryInput" placeholder="Nama Kategori Baru" />
-    <button onclick="addNewCategory()">Add Category RTP</button>
-  </div>
+<div class="bottom-buttons">
+  <input type="text" id="newCategoryInput" placeholder="Nama Kategori Baru" />
+  <button onclick="addNewCategory()">Add Category RTP</button>
+</div>
 
-  <div id="categoryContainer"></div>
+<div id="categoryContainer"></div>
 
-  <script>
-    // sample data
-    let dataByCategory = {
-      "RTP PM Acc": [
-        {
-          no: 1,
-          items: [
-            {
-              issue: "List Tools 800 item (Teregister Asset)",
-              actions: ["Update collect masing-masing section status tools"],
-              pic: "By Section",
-              due: "Juni",
-              status: "Continue",
-              remarks: "Continue SE; Done; Track; Done; Wheel: 15 Juli; Audit: 23 Juli"
-            }
-          ]
-        }
-      ],
-      "RTP PA": [],
-      "RTP MXXTBF": []
-    };
+<script>
+let dataByCategory = {
+  "RTP PM Acc":[{no:1,items:[{issue:"List Tools 800 item (Teregister Asset)",actions:["Update collect masing-masing section status tools"],pic:"By Section",due:"Juni",status:"Continue",remarks:"Continue SE; Done; Track; Done; Wheel: 15 Juli; Audit: 23 Juli"}]}],
+  "RTP PA":[],
+  "RTP MXXTBF":[]
+};
 
-    function sanitizeId(id) {
-      return id.replace(/\s+/g, '_').replace(/[^\w\-]/g, '');
-    }
+function sanitizeId(id){return id.replace(/\s+/g,'_').replace(/[^\w\-]/g,'');}
+function escapeHtml(str){if(str==null) return ''; return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function recalculateNo(category){if(!dataByCategory[category]) return; dataByCategory[category].forEach((entry,idx)=>entry.no=idx+1);}
 
-    function escapeHtml(str) {
-      if (str == null) return '';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-    }
-
-    function renderAllTables() {
-      const container = document.getElementById("categoryContainer");
-      container.innerHTML = "";
-
-      Object.keys(dataByCategory).forEach(category => {
-        const safeId = sanitizeId(category);
-        const section = document.createElement("div");
-        section.classList.add("category-section");
-
-        section.innerHTML = `
-          <h3>
-            <span id="catTitle-${safeId}">${escapeHtml(category)}</span>
-            <span class="action-text" onclick='editCategory(${JSON.stringify(category)})'>Edit</span>
-            <span class="action-text" onclick='deleteCategory(${JSON.stringify(category)})'>Delete</span>
-          </h3>
-          <table>
-            <thead>
-              <tr>
-                <th>No</th><th>Issue</th><th>Action Plan</th><th>PIC</th>
-                <th>Due</th><th>Status</th><th>Remarks</th><th>Action</th>
-              </tr>
-            </thead>
-            <tbody id="tbody-${safeId}"></tbody>
-            <tfoot>
-              <tr><td colspan="8"><button onclick='addIssue(${JSON.stringify(category)})'>Add New Issue</button></td></tr>
-            </tfoot>
-          </table>
-        `;
-        container.appendChild(section);
-
-        const tbody = section.querySelector('#tbody-' + safeId);
-        if (!tbody) return;
-
-        dataByCategory[category].forEach((entry, idx) => {
-          entry.items.forEach((item, subIdx) => {
-            const tr = document.createElement("tr");
-            // use safe insertion for text content inside cells; contenteditable intentionally accepts HTML/text
-            tr.innerHTML = `
-              <td>${subIdx === 0 ? entry.no : ""}</td>
-              <td contenteditable="true">${escapeHtml(item.issue)}</td>
-              <td contenteditable="true">${escapeHtml(item.actions.join("\n")).replace(/\n/g, "<br>")}</td>
-              <td contenteditable="true">${escapeHtml(item.pic)}</td>
-              <td contenteditable="true">${escapeHtml(item.due)}</td>
-              <td contenteditable="true">${escapeHtml(item.status)}</td>
-              <td contenteditable="true">${escapeHtml(item.remarks)}</td>
-              <td>
-                <span class="action-text" onclick='addSubItem(${JSON.stringify(category)}, ${entry.no})'>Add Sub</span>
-                <span class="action-text" onclick='saveEdit(${JSON.stringify(category)}, ${entry.no}, ${subIdx})'>Save</span>
-                <span class="action-text" onclick='deleteItem(${JSON.stringify(category)}, ${entry.no}, ${subIdx})'>Delete</span>
-              </td>
-            `;
-            tbody.appendChild(tr);
-          });
-        });
+// update semua data dari table contenteditable sebelum render ulang
+function updateAllFromTable(){
+  Object.keys(dataByCategory).forEach(category=>{
+    const safeId=sanitizeId(category);
+    const tbody=document.querySelector('#tbody-'+safeId);
+    if(!tbody) return;
+    let rowCount=0;
+    dataByCategory[category].forEach(entry=>{
+      entry.items.forEach((item,idx)=>{
+        const row=tbody.querySelectorAll('tr')[rowCount++];
+        const cells=row.querySelectorAll('td');
+        item.issue=cells[1].innerText.trim();
+        item.actions=cells[2].innerHTML.split(/<br\s*\/?>/i).map(a=>a.replace(/&nbsp;|\u00A0/g,' ').trim());
+        item.pic=cells[3].innerText.trim();
+        item.due=cells[4].innerText.trim();
+        item.status=cells[5].innerText.trim();
+        item.remarks=cells[6].innerText.trim();
       });
-    }
+    });
+  });
+}
 
-    // --- Tambahan Edit & Delete Category ---
-    function editCategory(category) {
-      const safeId = sanitizeId(category);
-      const catTitle = document.getElementById('catTitle-' + safeId);
-      const currentName = category;
+function renderAllTables(){
+  const container=document.getElementById("categoryContainer");
+  container.innerHTML="";
+  Object.keys(dataByCategory).forEach(category=>{
+    recalculateNo(category);
+    const safeId=sanitizeId(category);
+    const section=document.createElement("div");
+    section.classList.add("category-section");
+    section.innerHTML=`
+      <h3>
+        <span id="catTitle-${safeId}">${escapeHtml(category)}</span>
+        <span class="action-text" onclick='editCategory(${JSON.stringify(category)})'>Edit</span>
+        <span class="action-text" onclick='deleteCategory(${JSON.stringify(category)})'>Delete</span>
+      </h3>
+      <table>
+        <thead><tr>
+          <th>No</th><th>Issue</th><th>Action Plan</th><th>PIC</th><th>Due</th><th>Status</th><th>Remarks</th><th>Action</th>
+        </tr></thead>
+        <tbody id="tbody-${safeId}"></tbody>
+        <tfoot><tr><td colspan="8"><button onclick='addIssue(${JSON.stringify(category)})'>Add New Issue</button></td></tr></tfoot>
+      </table>
+    `;
+    container.appendChild(section);
+    const tbody=section.querySelector('#tbody-'+safeId);
+    if(!tbody) return;
+    dataByCategory[category].forEach(entry=>{
+      entry.items.forEach((item,subIdx)=>{
+        const tr=document.createElement("tr");
+        tr.innerHTML=`
+          <td>${subIdx===0?entry.no:""}</td>
+          <td contenteditable="true">${escapeHtml(item.issue)}</td>
+          <td contenteditable="true">${escapeHtml(item.actions.join("\n")).replace(/\n/g,"<br>")}</td>
+          <td contenteditable="true">${escapeHtml(item.pic)}</td>
+          <td contenteditable="true">${escapeHtml(item.due)}</td>
+          <td contenteditable="true">${escapeHtml(item.status)}</td>
+          <td contenteditable="true">${escapeHtml(item.remarks)}</td>
+          <td>
+            <span class="action-text" onclick='addSubItem(${JSON.stringify(category)},${entry.no})'>Add Sub</span>
+            <span class="action-text" onclick='saveEdit(${JSON.stringify(category)},${entry.no},${subIdx})'>Save</span>
+            <span class="action-text" onclick='deleteItem(${JSON.stringify(category)},${entry.no},${subIdx})'>Delete</span>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    });
+  });
+}
 
-      if (!catTitle) return;
-      catTitle.innerHTML = `
-        <input type="text" id="editCatInput-${safeId}" value="${escapeHtml(currentName)}" style="width:200px;" />
-        <button onclick='saveCategoryName(${JSON.stringify(currentName)})'>Save</button>
-        <button onclick="renderAllTables()">Cancel</button>
-      `;
-    }
+// --- Category edit/delete ---
+function editCategory(category){
+  const safeId=sanitizeId(category);
+  const catTitle=document.getElementById('catTitle-'+safeId);
+  if(!catTitle) return;
+  catTitle.innerHTML=`
+    <input type="text" id="editCatInput-${safeId}" value="${escapeHtml(category)}" style="width:200px;" />
+    <button onclick='saveCategoryName(${JSON.stringify(category)})'>Save</button>
+    <button onclick="renderAllTables()">Cancel</button>
+  `;
+}
 
-    function saveCategoryName(oldName) {
-      const safeId = sanitizeId(oldName);
-      const input = document.getElementById('editCatInput-' + safeId);
-      if (!input) return;
-      const newName = input.value.trim();
+function saveCategoryName(oldName){
+  const safeId=sanitizeId(oldName);
+  const input=document.getElementById('editCatInput-'+safeId);
+  if(!input) return;
+  const newName=input.value.trim();
+  if(!newName){alert("Nama kategori tidak boleh kosong"); return;}
+  if(dataByCategory[newName] && newName!==oldName){alert("Nama kategori sudah ada"); return;}
+  dataByCategory[newName]=dataByCategory[oldName];
+  if(newName!==oldName) delete dataByCategory[oldName];
+  renderAllTables();
+}
 
-      if (!newName) {
-        alert("Nama kategori tidak boleh kosong");
-        return;
-      }
-      if (dataByCategory[newName] && newName !== oldName) {
-        alert("Nama kategori sudah ada");
-        return;
-      }
+function deleteCategory(category){ if(confirm('Yakin hapus kategori "'+category+'"?')){ delete dataByCategory[category]; renderAllTables(); } }
 
-      // Pindahkan data
-      dataByCategory[newName] = dataByCategory[oldName];
-      if (newName !== oldName) {
-        delete dataByCategory[oldName];
-      }
+// --- Issue / Sub Item ---
+function addNewCategory(){ const input=document.getElementById("newCategoryInput"); const newCategory=input.value.trim(); if(newCategory&&!dataByCategory[newCategory]){dataByCategory[newCategory]=[]; input.value=""; renderAllTables();} else {alert("Kategori sudah ada atau kosong.");} }
+function addIssue(category){ updateAllFromTable(); const newIssue={no:dataByCategory[category].length+1,items:[{issue:"New Issue",actions:["Initial Action"],pic:"PIC",due:"Due Date",status:"Open",remarks:""}]}; dataByCategory[category].push(newIssue); renderAllTables(); }
+function addSubItem(category,no){ updateAllFromTable(); const entry=dataByCategory[category].find(d=>d.no===no); if(entry){entry.items.push({issue:"",actions:[""],pic:"",due:"",status:"",remarks:""}); renderAllTables(); } }
+function saveEdit(category,no,idx){ updateAllFromTable(); renderAllTables(); }
+function deleteItem(category,no,idx){ updateAllFromTable(); const entry=dataByCategory[category].find(d=>d.no===no); if(entry){entry.items.splice(idx,1); if(entry.items.length===0){dataByCategory[category]=dataByCategory[category].filter(d=>d.no!==no);} renderAllTables();} }
 
-      renderAllTables();
-    }
+function getRowIndex(category,no,idx){ let count=0; for(let i=0;i<dataByCategory[category].length;i++){ if(dataByCategory[category][i].no===no){return count+idx;} count+=dataByCategory[category][i].items.length;} return -1; }
 
-    function deleteCategory(category) {
-      if (confirm('Yakin hapus kategori "' + category + '"?')) {
-        delete dataByCategory[category];
-        renderAllTables();
-      }
-    }
-    // --- End Tambahan ---
+// --- Save / Load JSON ---
+function saveToJSON(){ const json=JSON.stringify({dataByCategory},null,2); const blob=new Blob([json],{type:"application/json"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download="rtp_all_data.json"; a.click(); URL.revokeObjectURL(url);}
+function loadFromJSON(){ const fileInput=document.getElementById("jsonFileInput"); const file=fileInput.files[0]; if(!file){alert("Pilih file JSON terlebih dahulu."); return;} const reader=new FileReader(); reader.onload=function(e){ try{ const parsed=JSON.parse(e.target.result); dataByCategory=parsed.dataByCategory||{}; Object.keys(dataByCategory).forEach(cat=>recalculateNo(cat)); renderAllTables(); }catch(err){alert("Format JSON tidak valid.");} } reader.readAsText(file); }
 
-    function addNewCategory() {
-      const input = document.getElementById("newCategoryInput");
-      const newCategory = input.value.trim();
-      if (newCategory && !dataByCategory[newCategory]) {
-        dataByCategory[newCategory] = [];
-        input.value = "";
-        renderAllTables();
-      } else {
-        alert("Kategori sudah ada atau kosong.");
-      }
-    }
-
-    function addIssue(category) {
-      const newIssue = {
-        no: dataByCategory[category].length + 1,
-        items: [{
-          issue: "New Issue",
-          actions: ["Initial Action"],
-          pic: "PIC",
-          due: "Due Date",
-          status: "Open",
-          remarks: ""
-        }]
-      };
-      dataByCategory[category].push(newIssue);
-      renderAllTables();
-    }
-
-    function addSubItem(category, no) {
-      const entry = dataByCategory[category].find(d => d.no === no);
-      if (entry) {
-        entry.items.push({
-          issue: "",
-          actions: [""],
-          pic: "",
-          due: "",
-          status: "",
-          remarks: ""
-        });
-        renderAllTables();
-      }
-    }
-
-    function saveEdit(category, no, idx) {
-      const entry = dataByCategory[category].find(d => d.no === no);
-      if (!entry) return;
-
-      const safeId = sanitizeId(category);
-      const tbody = document.querySelector('#tbody-' + safeId);
-      const allRows = tbody ? tbody.querySelectorAll("tr") : [];
-      const rowIndex = getRowIndex(category, no, idx);
-      const row = allRows[rowIndex];
-      if (!row) return;
-
-      const cells = row.querySelectorAll("td");
-      entry.items[idx].issue = cells[1].innerText.trim();
-      // actions: innerHTML may contain <br>, normalize to array
-      entry.items[idx].actions = cells[2].innerHTML.split(/<br\s*\/?>/i).map(a => a.replace(/&nbsp;|\u00A0/g, ' ').trim());
-      entry.items[idx].pic = cells[3].innerText.trim();
-      entry.items[idx].due = cells[4].innerText.trim();
-      entry.items[idx].status = cells[5].innerText.trim();
-      entry.items[idx].remarks = cells[6].innerText.trim();
-
-      row.style.backgroundColor = "#d4edda";
-      setTimeout(() => {
-        row.style.backgroundColor = "";
-      }, 1000);
-
-      renderAllTables();
-    }
-
-    function deleteItem(category, no, idx) {
-      const entry = dataByCategory[category].find(d => d.no === no);
-      if (entry) {
-        entry.items.splice(idx, 1);
-        if (entry.items.length === 0) {
-          dataByCategory[category] = dataByCategory[category].filter(d => d.no !== no);
-        }
-        renderAllTables();
-      }
-    }
-
-    function getRowIndex(category, no, idx) {
-      let count = 0;
-      for (let i = 0; i < dataByCategory[category].length; i++) {
-        if (dataByCategory[category][i].no === no) {
-          return count + idx;
-        }
-        count += dataByCategory[category][i].items.length;
-      }
-      return -1;
-    }
-
-    function saveToJSON() {
-      const json = JSON.stringify({ dataByCategory }, null, 2);
-      const blob = new Blob([json], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "rtp_all_data.json";
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    function loadFromJSON() {
-      const fileInput = document.getElementById("jsonFileInput");
-      const file = fileInput.files[0];
-      if (!file) {
-        alert("Pilih file JSON terlebih dahulu.");
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        try {
-          const parsed = JSON.parse(e.target.result);
-          dataByCategory = parsed.dataByCategory || {};
-          renderAllTables();
-        } catch (err) {
-          alert("Format JSON tidak valid.");
-        }
-      };
-      reader.readAsText(file);
-    }
-
-    renderAllTables();
-  </script>
+renderAllTables();
+</script>
 </body>
 </html>
