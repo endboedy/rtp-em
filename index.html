@@ -132,7 +132,23 @@
     }
 
     function editIssue(index) {
-      alert("Edit fungsi belum dibuat. Index: " + index);
+      const item = data[index];
+
+      const newIssue = prompt("Edit Issue:", item.issue);
+      const newPIC = prompt("Edit PIC:", item.pic);
+      const newDue = prompt("Edit Due:", item.due);
+      const newStatus = prompt("Edit Status:", item.status);
+      const newRemarks = prompt("Edit Remarks:", item.remarks);
+      const newActionsRaw = prompt("Edit Action Plans (pisahkan dengan koma):", item.actions.join(", "));
+
+      if (newIssue !== null) item.issue = newIssue;
+      if (newPIC !== null) item.pic = newPIC;
+      if (newDue !== null) item.due = newDue;
+      if (newStatus !== null) item.status = newStatus;
+      if (newRemarks !== null) item.remarks = newRemarks;
+      if (newActionsRaw !== null) item.actions = newActionsRaw.split(",").map(a => a.trim());
+
+      renderTable();
     }
 
     function deleteIssue(index) {
