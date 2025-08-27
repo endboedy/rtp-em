@@ -38,6 +38,12 @@
     td[contenteditable="true"] {
       background-color: #ffffcc;
     }
+    span.action-text {
+      cursor: pointer;
+      color: blue;
+      text-decoration: underline;
+      margin-right: 6px;
+    }
   </style>
 </head>
 <body>
@@ -130,9 +136,9 @@
             <td contenteditable="true">${item.status}</td>
             <td contenteditable="true">${item.remarks}</td>
             <td>
-              ${idx === 0 ? `<span onclick="addSubItem(${entry.no})">Add Sub</span> | ` : ""}
-              <span onclick="saveEdit(${entry.no}, ${idx})">Save</span>
-              ${idx === 0 ? ` | <span onclick="deleteIssue(${entry.no})">Delete</span>` : ""}
+              <span class="action-text" onclick="addSubItem(${entry.no})">Add Sub</span>
+              <span class="action-text" onclick="saveEdit(${entry.no}, ${idx})">Save</span>
+              <span class="action-text" onclick="deleteItem(${entry.no}, ${idx})">Delete</span>
             </td>
           `;
           tableBody.appendChild(tr);
@@ -186,6 +192,17 @@
       renderTable();
     }
 
+    function deleteItem(no, idx) {
+      const entry = data.find(d => d.no === no);
+      if (entry) {
+        entry.items.splice(idx, 1);
+        if (entry.items.length === 0) {
+          data = data.filter(d => d.no !== no);
+        }
+        renderTable();
+      }
+    }
+
     function getRowIndex(no, idx) {
       let count = 0;
       for (let i = 0; i < data.length; i++) {
@@ -195,13 +212,6 @@
         count += data[i].items.length;
       }
       return -1;
-    }
-
-    function deleteIssue(no) {
-      if (confirm("Yakin ingin menghapus semua item dengan nomor ini?")) {
-        data = data.filter(d => d.no !== no);
-        renderTable();
-      }
     }
 
     function loadFromJSON() {
