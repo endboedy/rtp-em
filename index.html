@@ -83,6 +83,7 @@
   <div id="categoryContainer"></div>
 
   <script>
+    // sample data
     let dataByCategory = {
       "RTP PM Acc": [
         {
@@ -107,6 +108,16 @@
       return id.replace(/\s+/g, '_').replace(/[^\w\-]/g, '');
     }
 
+    function escapeHtml(str) {
+      if (str == null) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
     function renderAllTables() {
       const container = document.getElementById("categoryContainer");
       container.innerHTML = "";
@@ -118,9 +129,9 @@
 
         section.innerHTML = `
           <h3>
-            <span id="catTitle-${safeId}">${category}</span>
-            <span class="action-text" onclick="editCategory('${category}')">Edit</span>
-            <span class="action-text" onclick="deleteCategory('${category}')">Delete</span>
+            <span id="catTitle-${safeId}">${escapeHtml(category)}</span>
+            <span class="action-text" onclick='editCategory(${JSON.stringify(category)})'>Edit</span>
+            <span class="action-text" onclick='deleteCategory(${JSON.stringify(category)})'>Delete</span>
           </h3>
           <table>
             <thead>
@@ -131,28 +142,31 @@
             </thead>
             <tbody id="tbody-${safeId}"></tbody>
             <tfoot>
-              <tr><td colspan="8"><button onclick="addIssue('${category}')">Add New Issue</button></td></tr>
+              <tr><td colspan="8"><button onclick='addIssue(${JSON.stringify(category)})'>Add New Issue</button></td></tr>
             </tfoot>
           </table>
         `;
         container.appendChild(section);
 
-        const tbody = section.querySelector(#tbody-${safeId});
+        const tbody = section.querySelector('#tbody-' + safeId);
+        if (!tbody) return;
+
         dataByCategory[category].forEach((entry, idx) => {
           entry.items.forEach((item, subIdx) => {
             const tr = document.createElement("tr");
+            // use safe insertion for text content inside cells; contenteditable intentionally accepts HTML/text
             tr.innerHTML = `
               <td>${subIdx === 0 ? entry.no : ""}</td>
-              <td contenteditable="true">${item.issue}</td>
-              <td contenteditable="true">${item.actions.join("<br>")}</td>
-              <td contenteditable="true">${item.pic}</td>
-              <td contenteditable="true">${item.due}</td>
-              <td contenteditable="true">${item.status}</td>
-              <td contenteditable="true">${item.remarks}</td>
+              <td contenteditable="true">${escapeHtml(item.issue)}</td>
+              <td contenteditable="true">${escapeHtml(item.actions.join("\n")).replace(/\n/g, "<br>")}</td>
+              <td contenteditable="true">${escapeHtml(item.pic)}</td>
+              <td contenteditable="true">${escapeHtml(item.due)}</td>
+              <td contenteditable="true">${escapeHtml(item.status)}</td>
+              <td contenteditable="true">${escapeHtml(item.remarks)}</td>
               <td>
-                <span class="action-text" onclick="addSubItem('${category}', ${entry.no})">Add Sub</span>
-                <span class="action-text" onclick="saveEdit('${category}', ${entry.no}, ${subIdx})">Save</span>
-                <span class="action-text" onclick="deleteItem('${category}', ${entry.no}, ${subIdx})">Delete</span>
+                <span class="action-text" onclick='addSubItem(${JSON.stringify(category)}, ${entry.no})'>Add Sub</span>
+                <span class="action-text" onclick='saveEdit(${JSON.stringify(category)}, ${entry.no}, ${subIdx})'>Save</span>
+                <span class="action-text" onclick='deleteItem(${JSON.stringify(category)}, ${entry.no}, ${subIdx})'>Delete</span>
               </td>
             `;
             tbody.appendChild(tr);
@@ -164,19 +178,21 @@
     // --- Tambahan Edit & Delete Category ---
     function editCategory(category) {
       const safeId = sanitizeId(category);
-      const catTitle = document.getElementById(catTitle-${safeId});
+      const catTitle = document.getElementById('catTitle-' + safeId);
       const currentName = category;
 
+      if (!catTitle) return;
       catTitle.innerHTML = `
-        <input type="text" id="editCatInput-${safeId}" value="${currentName}" style="width:200px;" />
-        <button onclick="saveCategoryName('${category}')">Save</button>
+        <input type="text" id="editCatInput-${safeId}" value="${escapeHtml(currentName)}" style="width:200px;" />
+        <button onclick='saveCategoryName(${JSON.stringify(currentName)})'>Save</button>
         <button onclick="renderAllTables()">Cancel</button>
       `;
     }
 
     function saveCategoryName(oldName) {
       const safeId = sanitizeId(oldName);
-      const input = document.getElementById(editCatInput-${safeId});
+      const input = document.getElementById('editCatInput-' + safeId);
+      if (!input) return;
       const newName = input.value.trim();
 
       if (!newName) {
@@ -198,7 +214,7 @@
     }
 
     function deleteCategory(category) {
-      if (confirm(Yakin hapus kategori "${category}"?)) {
+      if (confirm('Yakin hapus kategori "' + category + '"?')) {
         delete dataByCategory[category];
         renderAllTables();
       }
@@ -253,13 +269,16 @@
       if (!entry) return;
 
       const safeId = sanitizeId(category);
-      const tbody = document.querySelector(#tbody-${safeId});
-      const row = tbody.querySelectorAll("tr")[getRowIndex(category, no, idx)];
+      const tbody = document.querySelector('#tbody-' + safeId);
+      const allRows = tbody ? tbody.querySelectorAll("tr") : [];
+      const rowIndex = getRowIndex(category, no, idx);
+      const row = allRows[rowIndex];
       if (!row) return;
 
       const cells = row.querySelectorAll("td");
       entry.items[idx].issue = cells[1].innerText.trim();
-      entry.items[idx].actions = cells[2].innerHTML.split("<br>").map(a => a.trim());
+      // actions: innerHTML may contain <br>, normalize to array
+      entry.items[idx].actions = cells[2].innerHTML.split(/<br\s*\/?>/i).map(a => a.replace(/&nbsp;|\u00A0/g, ' ').trim());
       entry.items[idx].pic = cells[3].innerText.trim();
       entry.items[idx].due = cells[4].innerText.trim();
       entry.items[idx].status = cells[5].innerText.trim();
