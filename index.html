@@ -50,6 +50,7 @@
   <h2>RTP EM BMB</h2>
 
   <div class="top-buttons">
+    <input type="file" id="jsonFileInput" accept=".json" style="margin-right: 10px;" />
     <button onclick="loadFromJSON()">Load JSON</button>
     <button onclick="saveToJSON()">Save to JSON</button>
   </div>
@@ -75,50 +76,7 @@
   </div>
 
   <script>
-    let data = [
-      {
-        no: 1,
-        items: [
-          {
-            issue: "List Tools 800 item (Teregister Asset)",
-            actions: ["Update collect masing masing section status tools"],
-            pic: "By Section",
-            due: "Juni",
-            status: "Continue",
-            remarks: "Continue SE: Done, Track: Done, Wheel: 15 Juli, Audit: 23 Juli"
-          },
-          {
-            issue: "",
-            actions: ["Setelah list, serahkan kembali ke SCM simpan by section rack di SCM"],
-            pic: "Section Head exc",
-            due: "Maret",
-            status: "Continue",
-            remarks: "Rule peminjaman tools harus sepengetahuan section head lain"
-          },
-          {
-            issue: "",
-            actions: ["Kompetensi Tools room"],
-            pic: "",
-            due: "",
-            status: "",
-            remarks: ""
-          }
-        ]
-      },
-      {
-        no: 2,
-        items: [
-          {
-            issue: "WO yang belum Kembali",
-            actions: ["Monitoring & memastikan WO job done kembali ke admin"],
-            pic: "Section Head Exce",
-            due: "Daily",
-            status: "Continue",
-            remarks: ""
-          }
-        ]
-      }
-    ];
+    let data = [];
 
     const tableBody = document.querySelector("#dataTable tbody");
 
@@ -214,13 +172,61 @@
       return -1;
     }
 
-    function loadFromJSON() {
-      alert("Fungsi Load JSON belum diimplementasikan.");
+    function saveToJSON() {
+      const json = JSON.stringify(data, null, 2);
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "rtp_data.json";
+      a.click();
+      URL.revokeObjectURL(url);
     }
 
-    function saveToJSON() {
-      alert("Fungsi Save JSON belum diimplementasikan.");
+    function loadFromJSON() {
+      const fileInput = document.getElementById("jsonFileInput");
+      const file = fileInput.files[0];
+      if (!file) {
+        alert("Pilih file JSON terlebih dahulu.");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        try {
+          data = JSON.parse(e.target.result);
+          renderTable();
+        } catch (err) {
+          alert("Format JSON tidak valid.");
+        }
+      };
+      reader.readAsText(file);
     }
+
+    // Dummy data awal
+    data = [
+      {
+        no: 1,
+        items: [
+          {
+            issue: "List Tools 800 item (Teregister Asset)",
+            actions: ["Update collect masing masing section status tools"],
+            pic: "By Section",
+            due: "Juni",
+            status: "Continue",
+            remarks: "Continue SE: Done, Track: Done, Wheel: 15 Juli, Audit: 23 Juli"
+          },
+          {
+            issue: "",
+            actions: ["Setelah list, serahkan kembali ke SCM simpan by section rack di SCM"],
+            pic: "Section Head exc",
+            due: "Maret",
+            status: "Continue",
+            remarks: "Rule peminjaman tools harus sepengetahuan section head lain"
+          }
+        ]
+      }
+    ];
 
     renderTable();
   </script>
