@@ -44,6 +44,9 @@
       padding-left: 20px;
       margin: 0;
     }
+    td[contenteditable="true"] {
+      background-color: #ffffcc;
+    }
   </style>
 </head>
 <body>
@@ -98,23 +101,43 @@
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${item.no}</td>
-          <td>${item.issue}</td>
-          <td>${item.pic}</td>
-          <td>${item.due}</td>
-          <td>${item.status}</td>
-          <td>${item.remarks}</td>
+          <td contenteditable="false">${item.issue}</td>
+          <td contenteditable="false">${item.pic}</td>
+          <td contenteditable="false">${item.due}</td>
+          <td contenteditable="false">${item.status}</td>
+          <td contenteditable="false">${item.remarks}</td>
+          <td contenteditable="false">${item.actions.join("<br>")}</td>
           <td>
-            <ul>
-              ${item.actions.map(act => `<li>${act}</li>`).join("")}
-            </ul>
-          </td>
-          <td>
-            <button onclick="editIssue(${index})">Edit</button>
+            <button onclick="enableEdit(this)">Edit</button>
+            <button onclick="saveEdit(this, ${index})">Save</button>
             <button onclick="deleteIssue(${index})">Delete</button>
           </td>
         `;
         tableBody.appendChild(tr);
       });
+    }
+
+    function enableEdit(button) {
+      const row = button.closest("tr");
+      const cells = row.querySelectorAll("td");
+      for (let i = 1; i <= 6; i++) {
+        cells[i].setAttribute("contenteditable", "true");
+      }
+      cells[6].setAttribute("contenteditable", "true"); // Action Plan(s)
+    }
+
+    function saveEdit(button, index) {
+      const row = button.closest("tr");
+      const cells = row.querySelectorAll("td");
+
+      data[index].issue = cells[1].innerText.trim();
+      data[index].pic = cells[2].innerText.trim();
+      data[index].due = cells[3].innerText.trim();
+      data[index].status = cells[4].innerText.trim();
+      data[index].remarks = cells[5].innerText.trim();
+      data[index].actions = cells[6].innerText.split("\n").map(a => a.trim());
+
+      renderTable();
     }
 
     function addIssue() {
@@ -128,26 +151,6 @@
         actions: ["Initial Action"]
       };
       data.push(newIssue);
-      renderTable();
-    }
-
-    function editIssue(index) {
-      const item = data[index];
-
-      const newIssue = prompt("Edit Issue:", item.issue);
-      const newPIC = prompt("Edit PIC:", item.pic);
-      const newDue = prompt("Edit Due:", item.due);
-      const newStatus = prompt("Edit Status:", item.status);
-      const newRemarks = prompt("Edit Remarks:", item.remarks);
-      const newActionsRaw = prompt("Edit Action Plans (pisahkan dengan koma):", item.actions.join(", "));
-
-      if (newIssue !== null) item.issue = newIssue;
-      if (newPIC !== null) item.pic = newPIC;
-      if (newDue !== null) item.due = newDue;
-      if (newStatus !== null) item.status = newStatus;
-      if (newRemarks !== null) item.remarks = newRemarks;
-      if (newActionsRaw !== null) item.actions = newActionsRaw.split(",").map(a => a.trim());
-
       renderTable();
     }
 
