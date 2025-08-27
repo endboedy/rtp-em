@@ -15,6 +15,10 @@
       text-align: center;
       margin-bottom: 10px;
     }
+    h3 {
+      margin-top: 30px;
+      color: #333;
+    }
     table {
       width: 100%;
       border-collapse: collapse;
@@ -30,11 +34,6 @@
     th {
       background-color: #eee;
     }
-    .top-buttons, .bottom-buttons {
-      display: flex;
-      justify-content: flex-end;
-      margin: 10px 0;
-    }
     td[contenteditable="true"] {
       background-color: #ffffcc;
     }
@@ -44,86 +43,114 @@
       text-decoration: underline;
       margin-right: 6px;
     }
-    .category-box {
-      margin-bottom: 10px;
+    .top-buttons, .bottom-buttons {
+      display: flex;
+      justify-content: flex-end;
+      margin: 10px 0;
+      gap: 10px;
     }
-    .category-box span {
-      cursor: pointer;
-      color: blue;
-      text-decoration: underline;
-      margin-left: 5px;
+    .category-section {
+      margin-bottom: 40px;
     }
   </style>
 </head>
 <body>
   <h2>RTP EM BMB</h2>
 
-  <div class="category-box">
-    <label for="categoryRTP">Category RTP:</label>
-    <span id="categoryRTP" onclick="editCategoryRTP()">Tools</span>
-    <input type="text" id="inputCategoryRTP" style="display:none;" onblur="saveCategoryRTP()" />
-    <button onclick="editCategoryRTP()">Edit</button>
-  </div>
-
   <div class="top-buttons">
-    <input type="file" id="jsonFileInput" accept=".json" style="margin-right: 10px;" />
+    <input type="file" id="jsonFileInput" accept=".json" />
     <button onclick="loadFromJSON()">Load JSON</button>
     <button onclick="saveToJSON()">Save to JSON</button>
   </div>
 
-  <table id="dataTable">
-    <thead>
-      <tr>
-        <th>No</th>
-        <th>Issue</th>
-        <th>Action Plan</th>
-        <th>PIC</th>
-        <th>Due</th>
-        <th>Status</th>
-        <th>Remarks</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
   <div class="bottom-buttons">
-    <button onclick="addIssue()">Add New Issue</button>
+    <input type="text" id="newCategoryInput" placeholder="Nama Kategori Baru" />
+    <button onclick="addNewCategory()">Add Category RTP</button>
   </div>
 
+  <div id="categoryContainer"></div>
+
   <script>
-    let data = [];
-    let categoryRTP = "Tools";
+    let dataByCategory = {
+      "RTP PM Acc": [
+        {
+          no: 1,
+          items: [
+            {
+              issue: "List Tools 800 item (Teregister Asset)",
+              actions: ["Update collect masing-masing section status tools"],
+              pic: "By Section",
+              due: "Juni",
+              status: "Continue",
+              remarks: "Continue SE; Done; Track; Done; Wheel: 15 Juli; Audit: 23 Juli"
+            }
+          ]
+        }
+      ]
+    };
 
-    const tableBody = document.querySelector("#dataTable tbody");
+    function renderAllTables() {
+      const container = document.getElementById("categoryContainer");
+      container.innerHTML = "";
 
-    function renderTable() {
-      tableBody.innerHTML = "";
-      data.forEach(entry => {
-        entry.items.forEach((item, idx) => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${idx === 0 ? entry.no : ""}</td>
-            <td contenteditable="true">${item.issue}</td>
-            <td contenteditable="true">${item.actions.join("<br>")}</td>
-            <td contenteditable="true">${item.pic}</td>
-            <td contenteditable="true">${item.due}</td>
-            <td contenteditable="true">${item.status}</td>
-            <td contenteditable="true">${item.remarks}</td>
-            <td>
-              <span class="action-text" onclick="addSubItem(${entry.no})">Add Sub</span>
-              <span class="action-text" onclick="saveEdit(${entry.no}, ${idx})">Save</span>
-              <span class="action-text" onclick="deleteItem(${entry.no}, ${idx})">Delete</span>
-            </td>
-          `;
-          tableBody.appendChild(tr);
+      Object.keys(dataByCategory).forEach(category => {
+        const section = document.createElement("div");
+        section.classList.add("category-section");
+        section.innerHTML = `
+          <h3>${category}</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>No</th><th>Issue</th><th>Action Plan</th><th>PIC</th><th>Due</th><th>Status</th><th>Remarks</th><th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-${category}"></tbody>
+            <tfoot>
+              <tr><td colspan="8"><button onclick="addIssue('${category}')">Add New Issue</button></td></tr>
+            </tfoot>
+          </table>
+        `;
+        container.appendChild(section);
+
+        const tbody = section.querySelector(`#tbody-${category}`);
+        dataByCategory[category].forEach((entry, idx) => {
+          entry.items.forEach((item, subIdx) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${subIdx === 0 ? entry.no : ""}</td>
+              <td contenteditable="true">${item.issue}</td>
+              <td contenteditable="true">${item.actions.join("<br>")}</td>
+              <td contenteditable="true">${item.pic}</td>
+              <td contenteditable="true">${item.due}</td>
+              <td contenteditable="true">${item.status}</td>
+              <td contenteditable="true">${item.remarks}</td>
+              <td>
+                <span class="action-text" onclick="addSubItem('${category}', ${entry.no})">Add Sub</span>
+                <span class="action-text" onclick="saveEdit('${category}', ${entry.no}, ${subIdx})">Save</span>
+                <span class="action-text" onclick="deleteItem('${category}', ${entry.no}, ${subIdx})">Delete</span>
+              </td>
+            `;
+            tbody.appendChild(tr);
+          });
         });
       });
     }
 
-    function addIssue() {
+    function addNewCategory() {
+      const input = document.getElementById("newCategoryInput");
+      const newCategory = input.value.trim();
+      if (newCategory && !dataByCategory[newCategory]) {
+        dataByCategory[newCategory] = [];
+        input.value = "";
+        renderAllTables();
+      } else {
+        alert("Kategori sudah ada atau kosong.");
+      }
+    }
+
+    function addIssue(category) {
       const newIssue = {
-        no: data.length + 1,
+        no: dataByCategory[category].length + 1,
         items: [
           {
             issue: "New Issue",
@@ -135,12 +162,12 @@
           }
         ]
       };
-      data.push(newIssue);
-      renderTable();
+      dataByCategory[category].push(newIssue);
+      renderAllTables();
     }
 
-    function addSubItem(no) {
-      const entry = data.find(d => d.no === no);
+    function addSubItem(category, no) {
+      const entry = dataByCategory[category].find(d => d.no === no);
       entry.items.push({
         issue: "",
         actions: [""],
@@ -149,12 +176,13 @@
         status: "",
         remarks: ""
       });
-      renderTable();
+      renderAllTables();
     }
 
-    function saveEdit(no, idx) {
-      const entry = data.find(d => d.no === no);
-      const row = tableBody.querySelectorAll("tr")[getRowIndex(no, idx)];
+    function saveEdit(category, no, idx) {
+      const entry = dataByCategory[category].find(d => d.no === no);
+      const tbody = document.querySelector(`#tbody-${category}`);
+      const row = tbody.querySelectorAll("tr")[getRowIndex(category, no, idx)];
       const cells = row.querySelectorAll("td");
 
       entry.items[idx].issue = cells[1].innerText.trim();
@@ -164,38 +192,38 @@
       entry.items[idx].status = cells[5].innerText.trim();
       entry.items[idx].remarks = cells[6].innerText.trim();
 
-      renderTable();
+      renderAllTables();
     }
 
-    function deleteItem(no, idx) {
-      const entry = data.find(d => d.no === no);
+    function deleteItem(category, no, idx) {
+      const entry = dataByCategory[category].find(d => d.no === no);
       if (entry) {
         entry.items.splice(idx, 1);
         if (entry.items.length === 0) {
-          data = data.filter(d => d.no !== no);
+          dataByCategory[category] = dataByCategory[category].filter(d => d.no !== no);
         }
-        renderTable();
+        renderAllTables();
       }
     }
 
-    function getRowIndex(no, idx) {
+    function getRowIndex(category, no, idx) {
       let count = 0;
-      for (let i = 0; i < data.length; i++) {
-        if (data[i].no === no) {
+      for (let i = 0; i < dataByCategory[category].length; i++) {
+        if (dataByCategory[category][i].no === no) {
           return count + idx;
         }
-        count += data[i].items.length;
+        count += dataByCategory[category][i].items.length;
       }
       return -1;
     }
 
     function saveToJSON() {
-      const json = JSON.stringify({ categoryRTP, data }, null, 2);
+      const json = JSON.stringify({ dataByCategory }, null, 2);
       const blob = new Blob([json], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "rtp_data.json";
+      a.download = "rtp_all_data.json";
       a.click();
       URL.revokeObjectURL(url);
     }
@@ -212,10 +240,8 @@
       reader.onload = function (e) {
         try {
           const parsed = JSON.parse(e.target.result);
-          categoryRTP = parsed.categoryRTP || "Tools";
-          data = parsed.data || [];
-          document.getElementById("categoryRTP").innerText = categoryRTP;
-          renderTable();
+          dataByCategory = parsed.dataByCategory || {};
+          renderAllTables();
         } catch (err) {
           alert("Format JSON tidak valid.");
         }
@@ -223,42 +249,7 @@
       reader.readAsText(file);
     }
 
-    function editCategoryRTP() {
-      const span = document.getElementById("categoryRTP");
-      const input = document.getElementById("inputCategoryRTP");
-      input.value = categoryRTP;
-      span.style.display = "none";
-      input.style.display = "inline";
-      input.focus();
-    }
-
-    function saveCategoryRTP() {
-      const span = document.getElementById("categoryRTP");
-      const input = document.getElementById("inputCategoryRTP");
-      categoryRTP = input.value.trim() || "Tools";
-      span.innerText = categoryRTP;
-      input.style.display = "none";
-      span.style.display = "inline";
-    }
-
-    // Dummy data awal
-    data = [
-      {
-        no: 1,
-        items: [
-          {
-            issue: "List Tools 800 item (Teregister Asset)",
-            actions: ["Update collect masing masing section status tools"],
-            pic: "By Section",
-            due: "Juni",
-            status: "Continue",
-            remarks: "Continue SE: Done, Track: Done, Wheel: 15 Juli, Audit: 23 Juli"
-          }
-        ]
-      }
-    ];
-
-    renderTable();
+    renderAllTables();
   </script>
 </body>
 </html>
