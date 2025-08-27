@@ -13,7 +13,7 @@
     }
     h2 {
       text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
     }
     table {
       width: 100%;
@@ -44,10 +44,26 @@
       text-decoration: underline;
       margin-right: 6px;
     }
+    .category-box {
+      margin-bottom: 10px;
+    }
+    .category-box span {
+      cursor: pointer;
+      color: blue;
+      text-decoration: underline;
+      margin-left: 5px;
+    }
   </style>
 </head>
 <body>
   <h2>RTP EM BMB</h2>
+
+  <div class="category-box">
+    <label for="categoryRTP">Category RTP:</label>
+    <span id="categoryRTP" onclick="editCategoryRTP()">Tools</span>
+    <input type="text" id="inputCategoryRTP" style="display:none;" onblur="saveCategoryRTP()" />
+    <button onclick="editCategoryRTP()">Edit</button>
+  </div>
 
   <div class="top-buttons">
     <input type="file" id="jsonFileInput" accept=".json" style="margin-right: 10px;" />
@@ -77,6 +93,7 @@
 
   <script>
     let data = [];
+    let categoryRTP = "Tools";
 
     const tableBody = document.querySelector("#dataTable tbody");
 
@@ -173,7 +190,7 @@
     }
 
     function saveToJSON() {
-      const json = JSON.stringify(data, null, 2);
+      const json = JSON.stringify({ categoryRTP, data }, null, 2);
       const blob = new Blob([json], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -194,13 +211,34 @@
       const reader = new FileReader();
       reader.onload = function (e) {
         try {
-          data = JSON.parse(e.target.result);
+          const parsed = JSON.parse(e.target.result);
+          categoryRTP = parsed.categoryRTP || "Tools";
+          data = parsed.data || [];
+          document.getElementById("categoryRTP").innerText = categoryRTP;
           renderTable();
         } catch (err) {
           alert("Format JSON tidak valid.");
         }
       };
       reader.readAsText(file);
+    }
+
+    function editCategoryRTP() {
+      const span = document.getElementById("categoryRTP");
+      const input = document.getElementById("inputCategoryRTP");
+      input.value = categoryRTP;
+      span.style.display = "none";
+      input.style.display = "inline";
+      input.focus();
+    }
+
+    function saveCategoryRTP() {
+      const span = document.getElementById("categoryRTP");
+      const input = document.getElementById("inputCategoryRTP");
+      categoryRTP = input.value.trim() || "Tools";
+      span.innerText = categoryRTP;
+      input.style.display = "none";
+      span.style.display = "inline";
     }
 
     // Dummy data awal
@@ -215,14 +253,6 @@
             due: "Juni",
             status: "Continue",
             remarks: "Continue SE: Done, Track: Done, Wheel: 15 Juli, Audit: 23 Juli"
-          },
-          {
-            issue: "",
-            actions: ["Setelah list, serahkan kembali ke SCM simpan by section rack di SCM"],
-            pic: "Section Head exc",
-            due: "Maret",
-            status: "Continue",
-            remarks: "Rule peminjaman tools harus sepengetahuan section head lain"
           }
         ]
       }
