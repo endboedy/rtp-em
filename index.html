@@ -55,23 +55,24 @@ function recalculateNo(category){if(!dataByCategory[category]) return; dataByCat
 // update semua data dari table contenteditable sebelum render ulang
 function updateAllFromTable(){
   Object.keys(dataByCategory).forEach(category=>{
-    const safeId=sanitizeId(category);
-    const tbody=document.querySelector('#tbody-'+safeId);
+    const safeId = sanitizeId(category);
+    const tbody = document.querySelector('#tbody-'+safeId);
     if(!tbody) return;
-    let rowCount=0;
+    let rowCount = 0;
     dataByCategory[category].forEach(entry=>{
       entry.items.forEach((item,idx)=>{
-        const row=tbody.querySelectorAll('tr')[rowCount++];
-        const cells=row.querySelectorAll('td');
-        item.issue=cells[1].innerText.trim();
-        item.actions=cells[2].innerHTML.split(/<br\s*\/?>/i).map(a=>a.replace(/&nbsp;|\u00A0/g,' ').trim());
-        item.pic=cells[3].innerText.trim();
-        item.due=cells[4].innerText.trim();
-        item.status=cells[5].innerText.trim();
-        item.remarks=cells[6].innerText.trim();
+        const row = tbody.querySelectorAll('tr')[rowCount++];
+        const cells = row.querySelectorAll('td');
+        item.issue = cells[1].innerText.trim();
+        // Gunakan innerText untuk Action Plan, split baris baru
+        item.actions = cells[2].innerText.split('\n').map(a=>a.trim());
+        item.pic = cells[3].innerText.trim();
+        item.due = cells[4].innerText.trim();
+        item.status = cells[5].innerText.trim();
+        item.remarks = cells[6].innerText.trim();
       });
-    });
-  });
+    });
+  });
 }
 
 function renderAllTables(){
